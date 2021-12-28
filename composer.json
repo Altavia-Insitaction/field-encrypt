@@ -1,0 +1,26 @@
+{
+    "version": "1.0.0",
+    "name": "insitaction/field-encrypt-bundle",
+    "description": "Allows automatic encryption of fields, as required by GDPR.",
+    "type": "symfony-bundle",
+    "require": {
+        "php": ">=8.0",
+        "symfony/framework-bundle": "^5",
+        "doctrine/orm": "^2.10"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest"
+    },
+    "autoload": {
+        "psr-4": {
+            "Insitaction\\FieldsEncryptBundle\\": "src/"
+        }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Julien Blairy",
+            "email": "jblairy@insitaction.com"
+        }
+    ]
+}
