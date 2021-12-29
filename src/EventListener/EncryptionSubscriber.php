@@ -2,17 +2,17 @@
 
 namespace Insitaction\FieldEncryptBundle\EventListener;
 
-use Insitaction\FieldEncryptBundle\Annotations\Encrypt;
 use Doctrine\Common\Annotations\Reader;
+use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Exception;
+use Insitaction\FieldEncryptBundle\Annotations\Encrypt;
 use Insitaction\FieldEncryptBundle\Service\EncryptService;
 use ReflectionClass;
 use ReflectionProperty;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class EncryptionSubscriber implements EventSubscriberInterface
+class EncryptionSubscriber implements EventSubscriber
 {
     public function __construct(
         private EncryptService $encryptService,
@@ -20,7 +20,7 @@ class EncryptionSubscriber implements EventSubscriberInterface
     ) {
     }
 
-    public static function getSubscribedEvents(): array
+    public function getSubscribedEvents(): array
     {
         return [
             Events::prePersist,
