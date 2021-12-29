@@ -1,0 +1,12 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: true
+
+    Insitaction\FieldEncryptBundle\EventListener\EncryptionSubscriber:
+        tags:
+            - name: 'doctrine.event_subscriber'
+              priority: 500
+
+    Insitaction\FieldEncryptBundle\Service\EncryptService: ~
