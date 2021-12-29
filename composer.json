@@ -6,14 +6,12 @@
     "require": {
         "php": ">=8.0",
         "symfony/framework-bundle": "^5",
-        "doctrine/orm": "^2.10"
-    },
-    "require-dev": {
-        "roave/security-advisories": "dev-latest"
+        "doctrine/orm": "^2.10",
+        "ext-sodium": "*"
     },
     "autoload": {
         "psr-4": {
-            "Insitaction\\FieldsEncryptBundle\\": "src/"
+            "Insitaction\\FieldEncryptBundle\\": "src/"
         }
     },
     "license": "MIT",

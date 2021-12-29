@@ -1,13 +1,13 @@
 <?php
 
-namespace Insitaction\EventListener;
+namespace Insitaction\FieldEncryptBundle\EventListener;
 
-use Insitaction\Annotations\Encrypt;
+use Insitaction\FieldEncryptBundle\Annotations\Encrypt;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Exception;
-use Insitaction\Service\EncryptService;
+use Insitaction\FieldEncryptBundle\Service\EncryptService;
 use ReflectionClass;
 use ReflectionProperty;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;

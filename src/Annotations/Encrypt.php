@@ -1,6 +1,6 @@
 <?php
 
-namespace Insitaction\Annotations;
+namespace Insitaction\FieldEncryptBundle\Annotations;
 
 /**
  * @Annotation

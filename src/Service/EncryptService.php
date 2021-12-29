@@ -1,6 +1,6 @@
 <?php
 
-namespace Insitaction\Service;
+namespace Insitaction\FieldEncryptBundle\Service;
 
 use Exception;
 
