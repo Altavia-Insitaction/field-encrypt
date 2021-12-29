@@ -7,7 +7,8 @@
         "php": ">=8.0",
         "symfony/framework-bundle": "^5",
         "doctrine/orm": "^2.10",
-        "ext-sodium": "*"
+        "ext-sodium": "*",
+        "ext-openssl": "*"
     },
     "autoload": {
         "psr-4": {
