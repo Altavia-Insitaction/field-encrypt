@@ -10,6 +10,6 @@ use Doctrine\ORM\Mapping\Annotation;
  * @Target({"PROPERTY"})
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
-final class Encrypt implements Annotation, Attribute
+final class Encrypt implements Annotation
 {
 }
