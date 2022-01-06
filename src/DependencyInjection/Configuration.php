@@ -1,4 +1,5 @@
 <?php
+
 namespace Insitaction\FieldEncryptBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -12,11 +13,12 @@ class Configuration implements ConfigurationInterface
         $treeBuilder->getRootNode()
             ->children()
                 ->scalarNode('encrypt_key')
-                    ->defaultValue( '%env(ENCRYPT_KEY)%')
+                    ->defaultValue('%env(ENCRYPT_KEY)%')
                     ->info('aes-256-cbc key.')
                 ->end()
             ->end()
         ;
+
         return $treeBuilder;
     }
 }
