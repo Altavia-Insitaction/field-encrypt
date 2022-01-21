@@ -14,12 +14,9 @@ use ReflectionClass;
 
 class EncryptionSubscriber implements EventSubscriber
 {
-    /** @var string[] */
-    private array $cacheToDelete = [];
-
     public function __construct(
         private EncryptService $encryptService,
-        private CacheItem $cacheItem
+        private CacheItem $cacheItem,
     ) {
     }
 
@@ -28,16 +25,10 @@ class EncryptionSubscriber implements EventSubscriber
         return [
             Events::prePersist,
             Events::preUpdate,
+            Events::postPersist,
+            Events::postUpdate,
             Events::postLoad,
-            Events::postFlush,
         ];
-    }
-
-    public function postFlush(): void
-    {
-        foreach ($this->cacheToDelete as $cacheToDelete) {
-            $this->cacheItem->remove($cacheToDelete);
-        }
     }
 
     public function prePersist(LifecycleEventArgs $args): void
@@ -48,11 +39,27 @@ class EncryptionSubscriber implements EventSubscriber
         }
     }
 
+    public function postPersist(LifecycleEventArgs $args): void
+    {
+        $object = $args->getObject();
+        if ($object instanceof EncryptedFieldsInterface) {
+            $this->decryptFields($object);
+        }
+    }
+
     public function preUpdate(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
         if ($object instanceof EncryptedFieldsInterface) {
             $this->encryptFields($object);
+        }
+    }
+
+    public function postUpdate(LifecycleEventArgs $args): void
+    {
+        $object = $args->getObject();
+        if ($object instanceof EncryptedFieldsInterface) {
+            $this->decryptFields($object);
         }
     }
 
@@ -76,7 +83,7 @@ class EncryptionSubscriber implements EventSubscriber
 
                 if (is_callable([$entity, $set]) && is_callable([$entity, $get])) {
                     $entity->$set($this->encryptService->encrypt($entity->$get()));
-                    $this->cacheToDelete[] = md5($entityClass . 'decrypt' . $entity->getUniqueIdentifier() . $get);
+                    $this->cacheItem->remove(md5($entityClass . 'decrypt' . $entity->getUniqueIdentifier() . $get));
                 } else {
                     throw new Exception('You need to define get' . ucfirst($reflectionproperty->name) . 'in entity ' . $entity::class);
                 }
@@ -97,6 +104,18 @@ class EncryptionSubscriber implements EventSubscriber
                     $key = md5($entityClass . 'decrypt' . $entity->getUniqueIdentifier() . $get);
                     $cache = $this->cacheItem->get($key);
                     if (null === $cache) {
+                        if (!is_resource($entity->$get())) {
+                            $stream = fopen('php://memory', 'r+');
+
+                            if (false === $stream) {
+                                throw new Exception('Cant fopen.');
+                            }
+
+                            fwrite($stream, $entity->$get());
+                            rewind($stream);
+                            $entity->$set($stream);
+                        }
+
                         $decrypt = $this->encryptService->decrypt($entity->$get());
                         $entity->$set($decrypt);
                         $this->cacheItem->cache($decrypt, $key);
