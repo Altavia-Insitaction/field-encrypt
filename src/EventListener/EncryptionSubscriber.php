@@ -55,6 +55,22 @@ class EncryptionSubscriber implements EventSubscriber
         }
     }
 
+    public function postUpdate(LifecycleEventArgs $args): void
+    {
+        $object = $args->getObject();
+        if ($object instanceof EncryptedFieldsInterface) {
+            $this->decryptFields($object);
+        }
+    }
+
+    public function postLoad(LifecycleEventArgs $args): void
+    {
+        $object = $args->getObject();
+        if ($object instanceof EncryptedFieldsInterface) {
+            $this->decryptFields($object);
+        }
+    }
+
     private function encryptFields(EncryptedFieldsInterface $entity): void
     {
         foreach ((new ReflectionClass($entity))->getProperties() as $reflectionproperty) {
