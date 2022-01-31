@@ -38,18 +38,10 @@ class EncryptService
     }
 
     /**
-     * @param resource $ressource
-     *
      * @throws Exception
      */
-    public function decrypt($ressource): string
+    public function decrypt(string $data): string
     {
-        $data = stream_get_contents($ressource);
-
-        if (false === $data) {
-            throw new Exception('Can\'t reads remainder of a stream into a string', 500);
-        }
-
         if (SODIUM_CRYPTO_AEAD_AES256GCM_KEYBYTES !== mb_strlen($this->encryptKey, '8bit')) {
             throw new Exception('Wrong secret format', 500);
         }

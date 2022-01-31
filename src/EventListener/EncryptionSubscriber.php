@@ -3,6 +3,10 @@
 namespace Insitaction\FieldEncryptBundle\EventListener;
 
 use Doctrine\Common\EventSubscriber;
+use Doctrine\Common\Util\ClassUtils;
+use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Event\PostFlushEventArgs;
+use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Exception;
@@ -10,25 +14,64 @@ use Insitaction\FieldEncryptBundle\Annotations\Encrypt;
 use Insitaction\FieldEncryptBundle\Model\EncryptedFieldsInterface;
 use Insitaction\FieldEncryptBundle\Service\EncryptService;
 use ReflectionClass;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 
 class EncryptionSubscriber implements EventSubscriber
 {
     public const ENCRYPTION_MARKER = '<ENC>';
 
     public function __construct(
-        private EncryptService $encryptService
+        private EncryptService $encryptService,
     ) {
     }
 
     public function getSubscribedEvents(): array
     {
         return [
-            Events::prePersist,
             Events::preUpdate,
-            Events::postPersist,
             Events::postUpdate,
             Events::postLoad,
+            Events::postFlush,
+            Events::preFlush,
+            Events::onFlush,
+            Events::prePersist,
         ];
+    }
+
+    public function preFlush(PreFlushEventArgs $onFlushEventArgs): void
+    {
+        $unitOfWork = $onFlushEventArgs->getEntityManager()->getUnitOfWork();
+        foreach ($unitOfWork->getIdentityMap() as $identityMap) {
+            foreach ($identityMap as $entity) {
+                if ($entity instanceof EncryptedFieldsInterface) {
+                    $this->encryptFields($entity);
+                }
+            }
+        }
+    }
+
+    public function onFlush(OnFlushEventArgs $onFlushEventArgs): void
+    {
+        $unitOfWork = $onFlushEventArgs->getEntityManager()->getUnitOfWork();
+        foreach ($unitOfWork->getIdentityMap() as $identityMap) {
+            foreach ($identityMap as $entity) {
+                if ($entity instanceof EncryptedFieldsInterface) {
+                    $this->encryptFields($entity);
+                }
+            }
+        }
+    }
+
+    public function postFlush(PostFlushEventArgs $onFlushEventArgs): void
+    {
+        $unitOfWork = $onFlushEventArgs->getEntityManager()->getUnitOfWork();
+        foreach ($unitOfWork->getIdentityMap() as $identityMap) {
+            foreach ($identityMap as $entity) {
+                if ($entity instanceof EncryptedFieldsInterface) {
+                    $this->decryptFields($entity);
+                }
+            }
+        }
     }
 
     public function prePersist(LifecycleEventArgs $args): void
@@ -36,14 +79,6 @@ class EncryptionSubscriber implements EventSubscriber
         $object = $args->getObject();
         if ($object instanceof EncryptedFieldsInterface) {
             $this->encryptFields($object);
-        }
-    }
-
-    public function postPersist(LifecycleEventArgs $args): void
-    {
-        $object = $args->getObject();
-        if ($object instanceof EncryptedFieldsInterface) {
-            $this->decryptFields($object);
         }
     }
 
@@ -66,6 +101,7 @@ class EncryptionSubscriber implements EventSubscriber
     public function postLoad(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
+
         if ($object instanceof EncryptedFieldsInterface) {
             $this->decryptFields($object);
         }
@@ -73,17 +109,27 @@ class EncryptionSubscriber implements EventSubscriber
 
     private function encryptFields(EncryptedFieldsInterface $entity): void
     {
-        foreach ((new ReflectionClass($entity))->getProperties() as $reflectionproperty) {
-            if (0 !== count($reflectionproperty->getAttributes(Encrypt::class))) {
-                $set = 'set' . ucfirst($reflectionproperty->name);
-                $get = 'get' . ucfirst($reflectionproperty->name);
+        $entityClass = ClassUtils::getClass($entity);
 
-                if (is_callable([$entity, $set]) && is_callable([$entity, $get])) {
-                    if (self::ENCRYPTION_MARKER !== substr($entity->$get(), -strlen(self::ENCRYPTION_MARKER))) {
-                        $entity->$set($this->encryptService->encrypt($entity->$get() . self::ENCRYPTION_MARKER));
+        foreach ((new ReflectionClass($entityClass))->getProperties() as $reflectionproperty) {
+            if (0 !== count($reflectionproperty->getAttributes(Encrypt::class))) {
+                $pac = PropertyAccess::createPropertyAccessor();
+                $value = $pac->getValue($entity, $reflectionproperty->getName());
+
+                if (is_resource($value)) {
+                    $value = stream_get_contents($value);
+
+                    if (false === $value) {
+                        throw new Exception('Can\'t reads remainder of a stream into a string', 500);
                     }
-                } else {
-                    throw new Exception('You need to define get' . ucfirst($reflectionproperty->name) . 'in entity ' . $entity::class);
+                }
+
+                if (self::ENCRYPTION_MARKER !== substr($value, -strlen(self::ENCRYPTION_MARKER))) {
+                    $pac->setValue(
+                        $entity,
+                        $reflectionproperty->getName(),
+                        $this->encryptService->encrypt($value) . self::ENCRYPTION_MARKER
+                    );
                 }
             }
         }
@@ -91,31 +137,25 @@ class EncryptionSubscriber implements EventSubscriber
 
     private function decryptFields(EncryptedFieldsInterface $entity): void
     {
-        /** @var class-string $entityClass */
-        $entityClass = str_replace('Proxies\__CG__\\', '', get_class($entity));
+        $entityClass = ClassUtils::getClass($entity);
+
         foreach ((new ReflectionClass($entityClass))->getProperties() as $reflectionproperty) {
             if (0 !== count($reflectionproperty->getAttributes(Encrypt::class))) {
-                $set = 'set' . ucfirst($reflectionproperty->name);
-                $get = 'get' . ucfirst($reflectionproperty->name);
+                $pac = PropertyAccess::createPropertyAccessor();
+                $value = $pac->getValue($entity, $reflectionproperty->getName());
+                if (is_resource($value)) {
+                    $value = stream_get_contents($value);
 
-                if (is_callable([$entity, $set]) && is_callable([$entity, $get])) {
-                    if (!is_resource($entity->$get())) {
-                        $stream = fopen('php://memory', 'r+');
-
-                        if (false === $stream) {
-                            throw new Exception('Cant fopen.');
-                        }
-
-                        fwrite($stream, $entity->$get());
-                        rewind($stream);
-                        $entity->$set($stream);
+                    if (false === $value) {
+                        throw new Exception('Can\'t reads remainder of a stream into a string', 500);
                     }
-                    $decrypt = $this->encryptService->decrypt($entity->$get());
-                    if (self::ENCRYPTION_MARKER === substr($decrypt, -strlen(self::ENCRYPTION_MARKER))) {
-                        $entity->$set(substr($decrypt, 0, -strlen(self::ENCRYPTION_MARKER)));
-                    }
-                } else {
-                    throw new Exception('You need to define get' . ucfirst($reflectionproperty->name) . 'in entity ' . $entity::class);
+                }
+
+                if (self::ENCRYPTION_MARKER === substr($value, -strlen(self::ENCRYPTION_MARKER))) {
+                    $pac->setValue(
+                        $entity,
+                        $reflectionproperty->getName(),
+                        $this->encryptService->decrypt(substr($value, 0, -strlen(self::ENCRYPTION_MARKER))));
                 }
             }
         }

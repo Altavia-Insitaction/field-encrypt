@@ -4,5 +4,3 @@ parameters:
     level: 7
     paths:
         - src
-    ignoreErrors:
-        - '#Variable method call on [a-zA-Z0-9\\_\|].#'
