@@ -8,11 +8,13 @@ use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Events;
+use Doctrine\ORM\Mapping\Column;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Exception;
 use Insitaction\FieldEncryptBundle\Annotations\Encrypt;
 use Insitaction\FieldEncryptBundle\Model\EncryptedFieldsInterface;
 use Insitaction\FieldEncryptBundle\Service\EncryptService;
+use ReflectionAttribute;
 use ReflectionClass;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -116,6 +118,18 @@ class EncryptionSubscriber implements EventSubscriber
                 $pac = PropertyAccess::createPropertyAccessor();
                 $value = $pac->getValue($entity, $reflectionproperty->getName());
 
+                if (null === $value) {
+                    /** @var ReflectionAttribute $reflectionAttribute */
+                    $reflectionAttribute = $reflectionproperty->getAttributes(Column::class)[0];
+                    $arguments = $reflectionAttribute->getArguments();
+
+                    if (isset($arguments['nullable']) && true === $arguments['nullable']) {
+                        continue;
+                    }
+
+                    throw new Exception('Encrypt error, you must define ' . $reflectionproperty->getName() . ' as nullable.');
+                }
+
                 if (is_resource($value)) {
                     $value = stream_get_contents($value);
 
@@ -143,6 +157,11 @@ class EncryptionSubscriber implements EventSubscriber
             if (0 !== count($reflectionproperty->getAttributes(Encrypt::class))) {
                 $pac = PropertyAccess::createPropertyAccessor();
                 $value = $pac->getValue($entity, $reflectionproperty->getName());
+
+                if (null === $value) {
+                    continue;
+                }
+
                 if (is_resource($value)) {
                     $value = stream_get_contents($value);
 
