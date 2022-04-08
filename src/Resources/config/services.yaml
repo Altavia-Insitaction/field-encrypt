@@ -7,7 +7,7 @@ services:
     Insitaction\FieldEncryptBundle\EventListener\EncryptionSubscriber:
         tags:
             - name: 'doctrine.event_subscriber'
-              priority: 500
+              priority: 999999
 
     Insitaction\FieldEncryptBundle\Service\EncryptService:
         arguments: ['%field_encrypt.encrypt_key%']
