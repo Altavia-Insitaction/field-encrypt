@@ -4,6 +4,7 @@ namespace Insitaction\FieldEncryptBundle\EventListener;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Util\ClassUtils;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Event\PreFlushEventArgs;
@@ -24,6 +25,7 @@ class EncryptionSubscriber implements EventSubscriber
 
     public function __construct(
         private EncryptService $encryptService,
+        private EntityManagerInterface $em,
     ) {
     }
 
@@ -112,38 +114,43 @@ class EncryptionSubscriber implements EventSubscriber
     private function encryptFields(EncryptedFieldsInterface $entity): void
     {
         $entityClass = ClassUtils::getClass($entity);
+        $uow = $this->em->getUnitOfWork();
+        $changeset = $uow->getEntityChangeSet($entity);
+        $uow->computeChangeSet($this->em->getClassMetadata($entityClass), $entity);
 
-        foreach ((new ReflectionClass($entityClass))->getProperties() as $reflectionproperty) {
-            if (0 !== count($reflectionproperty->getAttributes(Encrypt::class))) {
-                $pac = PropertyAccess::createPropertyAccessor();
-                $value = $pac->getValue($entity, $reflectionproperty->getName());
+        if (0 !== count($changeset)) {
+            foreach ((new ReflectionClass($entityClass))->getProperties() as $reflectionproperty) {
+                if (0 !== count($reflectionproperty->getAttributes(Encrypt::class))) {
+                    $pac = PropertyAccess::createPropertyAccessor();
+                    $value = $pac->getValue($entity, $reflectionproperty->getName());
 
-                if (null === $value) {
-                    /** @var ReflectionAttribute $reflectionAttribute */
-                    $reflectionAttribute = $reflectionproperty->getAttributes(Column::class)[0];
-                    $arguments = $reflectionAttribute->getArguments();
+                    if (null === $value) {
+                        /** @var ReflectionAttribute $reflectionAttribute */
+                        $reflectionAttribute = $reflectionproperty->getAttributes(Column::class)[0];
+                        $arguments = $reflectionAttribute->getArguments();
 
-                    if (isset($arguments['nullable']) && true === $arguments['nullable']) {
-                        continue;
+                        if (isset($arguments['nullable']) && true === $arguments['nullable']) {
+                            continue;
+                        }
+
+                        throw new Exception('Encrypt error, you must define ' . $reflectionproperty->getName() . ' as nullable.');
                     }
 
-                    throw new Exception('Encrypt error, you must define ' . $reflectionproperty->getName() . ' as nullable.');
-                }
+                    if (is_resource($value)) {
+                        $value = stream_get_contents($value);
 
-                if (is_resource($value)) {
-                    $value = stream_get_contents($value);
-
-                    if (false === $value) {
-                        throw new Exception('Can\'t reads remainder of a stream into a string', 500);
+                        if (false === $value) {
+                            throw new Exception('Can\'t reads remainder of a stream into a string', 500);
+                        }
                     }
-                }
 
-                if (self::ENCRYPTION_MARKER !== substr($value, -strlen(self::ENCRYPTION_MARKER))) {
-                    $pac->setValue(
-                        $entity,
-                        $reflectionproperty->getName(),
-                        $this->encryptService->encrypt($value) . self::ENCRYPTION_MARKER
-                    );
+                    if (self::ENCRYPTION_MARKER !== substr($value, -strlen(self::ENCRYPTION_MARKER))) {
+                        $pac->setValue(
+                            $entity,
+                            $reflectionproperty->getName(),
+                            $this->encryptService->encrypt($value) . self::ENCRYPTION_MARKER
+                        );
+                    }
                 }
             }
         }
@@ -178,5 +185,19 @@ class EncryptionSubscriber implements EventSubscriber
                 }
             }
         }
+
+        $uow = $this->em->getUnitOfWork();
+        $origin = $uow->getOriginalEntityData($entity);
+
+        foreach ((new ReflectionClass($entityClass))->getProperties() as $reflectionproperty) {
+            if (0 !== count($reflectionproperty->getAttributes(Encrypt::class))) {
+                $pac = PropertyAccess::createPropertyAccessor();
+                $value = $pac->getValue($entity, $reflectionproperty->getName());
+                $origin[$reflectionproperty->getName()] = $value;
+            }
+        }
+
+        $uow->setOriginalEntityData($entity, $origin);
+        $uow->computeChangeSet($this->em->getClassMetadata($entityClass), $entity);
     }
 }
