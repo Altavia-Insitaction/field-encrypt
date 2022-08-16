@@ -3,13 +3,15 @@
 namespace Insitaction\FieldEncryptBundle\Doctrine\DBAL\Types;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Types\BlobType;
+use Doctrine\DBAL\Types\StringType;
 use Doctrine\DBAL\Types\Type;
 use Exception;
 use Insitaction\FieldEncryptBundle\EventListener\EncryptionListener;
 use Insitaction\FieldEncryptBundle\Service\EncryptService;
 use LogicException;
 
-class EncryptedString extends Type
+class EncryptedString extends BlobType
 {
     public const NAME = 'encrypted_string';
 
