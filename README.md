@@ -16,10 +16,7 @@ The ENCRYPT_KEY must be an aes-256-cbc key with the 32 first characters.
 
 ## Usage:
 
-You must add the #[Encrypt] attribute to the field you want to encrypt.
-Your entity must implements EncryptedFieldsInterface.
-You need to add an un unique identifier and pass throught the function getUniqueIdentifier defined in EncryptedFieldsInterface.
-(Do not use a non first instanciated value like id)
+You must add the EncryptedString::ENCRYPTED_STRING type attribute to the field you want to encrypt/decrypt.
 
 Let's see an example: 
 ```php
@@ -29,10 +26,10 @@ namespace App\Entity;
 
 use Insitaction\FieldEncryptBundle\Annotations\Encrypt;
 
-class MyEntity implements EncryptedFieldsInterface
+class MyEntity
 {
 
-    #[Encrypt]
+    #[ORM\Column(type: EncryptedString::ENCRYPTED_STRING, unique: true)]
     private mixed $myPrivateEncryptedField;
     
     #[ORM\Column(type: 'string', unique: true)]
