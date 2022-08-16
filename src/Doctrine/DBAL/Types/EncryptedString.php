@@ -11,11 +11,11 @@ use LogicException;
 
 class EncryptedString extends Type
 {
-    public const ENCRYPTED_STRING = 'encrypted_string';
+    public const NAME = 'encrypted_string';
 
     public function getName()
     {
-        return self::ENCRYPTED_STRING;
+        return self::NAME;
     }
 
     public function getSQLDeclaration(array $fieldDeclaration, AbstractPlatform $platform)
