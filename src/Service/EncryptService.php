@@ -7,9 +7,11 @@ use Exception;
 class EncryptService
 {
     public const METHOD = 'aes-256-cbc';
+    private string $encryptKey;
 
-    public function __construct(private string $encryptKey)
+    public function __construct(string $encryptKey)
     {
+        $this->encryptKey = $encryptKey;
     }
 
     /**

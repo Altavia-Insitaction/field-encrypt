@@ -8,9 +8,12 @@ class EncryptionListener
 {
     public const ENCRYPTION_MARKER = '<ENC>';
 
+    private EncryptService $encryptService;
+
     public function __construct(
-        private EncryptService $encryptService,
+        EncryptService $encryptService
     ) {
+        $this->encryptService = $encryptService;
     }
 
     public function getEncryptService(): EncryptService
