@@ -3,24 +3,19 @@
 namespace Insitaction\FieldEncryptBundle\Doctrine\DBAL\Types;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Types\BlobType;
+use Doctrine\DBAL\Types\BinaryType;
 use Exception;
 use Insitaction\FieldEncryptBundle\EventListener\EncryptionListener;
 use Insitaction\FieldEncryptBundle\Service\EncryptService;
 use LogicException;
 
-class EncryptedString extends BlobType
+class EncryptedString extends BinaryType
 {
-    public const NAME = 'encrypted_string';
+    public const NAME = 'ENCRYPTED_STRING';
 
     public function getName()
     {
         return self::NAME;
-    }
-
-    public function getSQLDeclaration(array $fieldDeclaration, AbstractPlatform $platform)
-    {
-        return 'ENCRYPTED_STRING';
     }
 
     public function convertToPHPValue($value, AbstractPlatform $platform)
