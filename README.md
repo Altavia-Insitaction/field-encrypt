@@ -1,7 +1,7 @@
 ![Insitaction](https://www.insitaction.com/assets/img/logo_insitaction.png)
 # Field Encrypt
 
-Field Encrypt is a symfony bundle which allows to encrypt the fields in the database as required by the RGPD.
+Field Encrypt is a symfony bundle which allows to encrypt the fields in the database as required by the GDPR.
 
 ## Installation:
 ```bash
@@ -24,7 +24,8 @@ Let's see an example:
 
 namespace App\Entity;
 
-use Insitaction\FieldEncryptBundle\Annotations\Encrypt;
+use Doctrine\ORM\Mapping as ORM;
+use Insitaction\FieldEncryptBundle\Doctrine\DBAL\Types\EncryptedString;
 
 class MyEntity
 {
