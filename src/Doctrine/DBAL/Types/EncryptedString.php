@@ -5,6 +5,7 @@ namespace Insitaction\FieldEncryptBundle\Doctrine\DBAL\Types;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\BinaryType;
 use Exception;
+use HtmlSanitizer\Sanitizer;
 use Insitaction\FieldEncryptBundle\EventListener\EncryptionListener;
 use Insitaction\FieldEncryptBundle\Service\EncryptService;
 use LogicException;
@@ -28,8 +29,8 @@ class EncryptedString extends BinaryType
             throw new LogicException('Value already decrypted.');
         }
 
-        return $this->getEncryptService($platform)
-                ->decrypt(substr($value, 0, -strlen(EncryptionListener::ENCRYPTION_MARKER)))
+        return $this->sanitize($this->getEncryptService($platform)
+                ->decrypt(substr($value, 0, -strlen(EncryptionListener::ENCRYPTION_MARKER))))
         ;
     }
 
@@ -44,7 +45,7 @@ class EncryptedString extends BinaryType
         }
 
         return $this->getEncryptService($platform)
-            ->encrypt($value) . EncryptionListener::ENCRYPTION_MARKER;
+            ->encrypt($this->sanitize($value)) . EncryptionListener::ENCRYPTION_MARKER;
     }
 
     public function canRequireSQLConversion()
@@ -62,5 +63,10 @@ class EncryptedString extends BinaryType
         }
 
         return $listener->getEncryptService();
+    }
+
+    private function sanitize(string $value): string
+    {
+        return Sanitizer::create(['extensions' => ['basic']])->sanitize($value);
     }
 }
