@@ -3,16 +3,16 @@
 namespace Insitaction\FieldEncryptBundle\Service\Misc;
 
 use InvalidArgumentException;
-use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 class CacheItem
 {
-    private AdapterInterface $cache;
+    private CacheItemPoolInterface $cache;
 
-    public function __construct(AdapterInterface $adapter)
+    public function __construct(CacheItemPoolInterface $cache)
     {
-        $this->cache = $adapter;
+        $this->cache = $cache;
     }
 
     public function get(string $cacheItemId): mixed

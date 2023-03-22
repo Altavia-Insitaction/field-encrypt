@@ -1,17 +1,17 @@
 {
-    "version": "2.0.0",
+    "version": "3.0.0",
     "name": "insitaction/field-encrypt-bundle",
     "description": "Allows automatic encryption of fields, as required by GDPR.",
     "type": "symfony-bundle",
     "require": {
-        "php": ">=7.4",
-        "symfony/framework-bundle": "^4|^5|^6",
+        "php": ">=8.2",
+        "symfony/framework-bundle": "^6",
         "doctrine/orm": "^2",
         "ext-sodium": "*",
         "ext-openssl": "*",
-        "symfony/property-access": "^4|^5|^6",
+        "symfony/property-access": "^6",
         "tgalopin/html-sanitizer": "^1.5",
-        "symfony/polyfill-php80": "^1.27"
+        "symfony/polyfill-php80": "^1"
     },
     "autoload": {
         "psr-4": {
@@ -26,12 +26,12 @@
         }
     ],
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.4",
-        "phpstan/phpstan": "^1.3",
-        "phpstan/extension-installer": "^1.1",
-        "phpstan/phpstan-strict-rules": "^1.1",
-        "phpstan/phpstan-doctrine": "^1.0",
-        "phpstan/phpstan-symfony": "^1.0"
+        "friendsofphp/php-cs-fixer": "*",
+        "phpstan/phpstan": "*",
+        "phpstan/extension-installer": "*",
+        "phpstan/phpstan-strict-rules": "*",
+        "phpstan/phpstan-doctrine": "*",
+        "phpstan/phpstan-symfony": "*"
     },
     "scripts": {
         "phpcsfixer": "./vendor/bin/php-cs-fixer fix",
