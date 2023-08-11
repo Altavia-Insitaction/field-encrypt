@@ -26,7 +26,7 @@ class EncryptedString extends BinaryType
         }
 
         if (is_resource($value)) {
-            $value = get_stream_contents($value);
+            $value = stream_get_contents($value);
         }
 
         if (!str_ends_with($value, EncryptionListener::ENCRYPTION_MARKER)) {
