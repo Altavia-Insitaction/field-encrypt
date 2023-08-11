@@ -25,6 +25,10 @@ class EncryptedString extends BinaryType
             return null;
         }
 
+        if (is_resource($value)) {
+            $value = stream_get_contents($value);
+        }
+
         if (!str_ends_with($value, EncryptionListener::ENCRYPTION_MARKER)) {
             throw new LogicException('Value already decrypted.');
         }
