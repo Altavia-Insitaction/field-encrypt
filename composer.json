@@ -1,5 +1,5 @@
 {
-    "version": "2.1.0",
+    "version": "2.1.1",
     "name": "insitaction/field-encrypt-bundle",
     "description": "Allows automatic encryption of fields, as required by GDPR.",
     "type": "symfony-bundle",
