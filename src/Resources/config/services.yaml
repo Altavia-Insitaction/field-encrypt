@@ -12,3 +12,5 @@ services:
         arguments: ['%field_encrypt.encrypt_key%']
 
     Insitaction\FieldEncryptBundle\Service\Misc\CacheItem: ~
+
+    Insitaction\FieldEncryptBundle\Command\MigrationCommand: ~

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Command;
+namespace Insitaction\FieldEncryptBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Insitaction\FieldEncryptBundle\Doctrine\DBAL\Types\EncryptedString;
