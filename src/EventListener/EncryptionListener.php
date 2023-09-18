@@ -3,21 +3,24 @@
 namespace Insitaction\FieldEncryptBundle\EventListener;
 
 use Insitaction\FieldEncryptBundle\Service\EncryptService;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 
 class EncryptionListener
 {
     public const ENCRYPTION_MARKER = '<ENC>';
 
-    private EncryptService $encryptService;
-
     public function __construct(
-        EncryptService $encryptService
-    ) {
-        $this->encryptService = $encryptService;
-    }
+        private readonly EncryptService $encryptService,
+        private readonly HtmlSanitizer $htmlSanitizer,
+    ) {}
 
     public function getEncryptService(): EncryptService
     {
         return $this->encryptService;
+    }
+
+    public function getHtmlSanitizer(): HtmlSanitizer
+    {
+        return $this->htmlSanitizer;
     }
 }

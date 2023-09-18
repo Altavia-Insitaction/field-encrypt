@@ -5,14 +5,16 @@ namespace Insitaction\FieldEncryptBundle\Doctrine\DBAL\Types;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\BinaryType;
 use Exception;
-use HtmlSanitizer\Sanitizer;
 use Insitaction\FieldEncryptBundle\EventListener\EncryptionListener;
 use Insitaction\FieldEncryptBundle\Service\EncryptService;
 use LogicException;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 
 class EncryptedString extends BinaryType
 {
     public const NAME = 'ENCRYPTED_STRING';
+    private ?EncryptService $encryptService = null;
+    private ?HtmlSanitizer $htmlSanitizer = null;
 
     public function getName()
     {
@@ -33,9 +35,10 @@ class EncryptedString extends BinaryType
             throw new LogicException('Value already decrypted.');
         }
 
-        return $this->sanitize($this->getEncryptService($platform)
-                ->decrypt(substr($value, 0, -strlen(EncryptionListener::ENCRYPTION_MARKER))))
-        ;
+        $this->getServices($platform);
+
+        return $this->sanitize($this->getEncryptService()
+            ->decrypt(substr($value, 0, -strlen(EncryptionListener::ENCRYPTION_MARKER))));
     }
 
     public function convertToDatabaseValue($value, AbstractPlatform $platform)
@@ -48,8 +51,9 @@ class EncryptedString extends BinaryType
             throw new LogicException('Value already encrypted.');
         }
 
-        return $this->getEncryptService($platform)
-            ->encrypt($this->sanitize($value)) . EncryptionListener::ENCRYPTION_MARKER;
+        $this->getServices($platform);
+
+        return $this->getEncryptService()->encrypt($this->sanitize($value)) . EncryptionListener::ENCRYPTION_MARKER;
     }
 
     public function canRequireSQLConversion()
@@ -57,7 +61,7 @@ class EncryptedString extends BinaryType
         return true;
     }
 
-    private function getEncryptService(AbstractPlatform $platform): EncryptService
+    private function getServices(AbstractPlatform $platform): void
     {
         $listeners = $platform->getEventManager()->getListeners('getEncryptService');
         $listener = array_shift($listeners);
@@ -66,11 +70,30 @@ class EncryptedString extends BinaryType
             throw new Exception('Cant find EncryptionListener.');
         }
 
-        return $listener->getEncryptService();
+        $this->encryptService = $listener->getEncryptService();
+        $this->htmlSanitizer = $listener->getHtmlSanitizer();
+    }
+
+    private function getEncryptService(): EncryptService
+    {
+        if (!$this->encryptService instanceof EncryptService) {
+            throw new Exception('EncryptService not loaded.');
+        }
+
+        return $this->encryptService;
+    }
+
+    private function getHtmlSanitizer(): HtmlSanitizer
+    {
+        if (!$this->htmlSanitizer instanceof HtmlSanitizer) {
+            throw new Exception('HtmlSanitizer not loaded.');
+        }
+
+        return $this->htmlSanitizer;
     }
 
     private function sanitize(string $value): string
     {
-        return Sanitizer::create(['extensions' => ['basic']])->sanitize($value);
+        return $this->getHtmlSanitizer()->sanitize($value);
     }
 }
