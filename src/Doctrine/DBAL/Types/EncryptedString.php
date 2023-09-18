@@ -38,7 +38,7 @@ class EncryptedString extends BinaryType
 
         $this->getServices($platform);
 
-        return $this->sanitize($this->getEncryptService()
+        return html_entity_decode($this->getEncryptService()
             ->decrypt(substr($value, 0, -strlen(EncryptionListener::ENCRYPTION_MARKER))));
     }
 
