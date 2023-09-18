@@ -9,12 +9,13 @@ use Insitaction\FieldEncryptBundle\EventListener\EncryptionListener;
 use Insitaction\FieldEncryptBundle\Service\EncryptService;
 use LogicException;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 
 class EncryptedString extends BinaryType
 {
     public const NAME = 'ENCRYPTED_STRING';
     private ?EncryptService $encryptService = null;
-    private ?HtmlSanitizer $htmlSanitizer = null;
+    private ?HtmlSanitizerInterface $htmlSanitizer = null;
 
     public function getName()
     {
