@@ -9,6 +9,9 @@ class EncryptService
     public const METHOD = 'aes-256-cbc';
     private string $encryptKey;
 
+    public const SODIUM_CRYPTO_AEAD_AES256GCM_KEYBYTES = 32;
+    public const SODIUM_CRYPTO_AEAD_AES256GCM_ABYTES = 16;
+
     public function __construct(string $encryptKey)
     {
         $this->encryptKey = $encryptKey;
@@ -19,7 +22,7 @@ class EncryptService
      */
     public function encrypt(string $data): string
     {
-        if (SODIUM_CRYPTO_AEAD_AES256GCM_KEYBYTES !== mb_strlen($this->encryptKey, '8bit')) {
+        if (self::SODIUM_CRYPTO_AEAD_AES256GCM_KEYBYTES !== mb_strlen($this->encryptKey, '8bit')) {
             throw new Exception('Wrong secret format', 500);
         }
 
@@ -44,7 +47,7 @@ class EncryptService
      */
     public function decrypt(string $data): string
     {
-        if (SODIUM_CRYPTO_AEAD_AES256GCM_KEYBYTES !== mb_strlen($this->encryptKey, '8bit')) {
+        if (self::SODIUM_CRYPTO_AEAD_AES256GCM_KEYBYTES !== mb_strlen($this->encryptKey, '8bit')) {
             throw new Exception('Wrong secret format', 500);
         }
 
@@ -56,7 +59,7 @@ class EncryptService
 
         $iv = mb_substr($data, 0, $ivsize, '8bit');
 
-        if (SODIUM_CRYPTO_AEAD_AES256GCM_ABYTES != strlen($iv)) {
+        if (self::SODIUM_CRYPTO_AEAD_AES256GCM_ABYTES != strlen($iv)) {
             throw new Exception('Wrong data encryption', 500);
         }
 

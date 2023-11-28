@@ -1,5 +1,4 @@
 {
-    "version": "3.0.3",
     "name": "insitaction/field-encrypt-bundle",
     "description": "Allows automatic encryption of fields, as required by GDPR.",
     "type": "symfony-bundle",
@@ -7,7 +6,6 @@
         "php": ">=8.2",
         "symfony/framework-bundle": "^6",
         "doctrine/orm": "^2",
-        "ext-sodium": "*",
         "ext-openssl": "*",
         "symfony/property-access": "^6",
         "symfony/polyfill-php80": "^1",
